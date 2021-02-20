@@ -7,6 +7,7 @@ Create a simple Calculator using tkinter module  '''
 from tkinter import *
 root = Tk()
 root.title("Calculator")    # set the title as Calculator
+root.resizable(False,False)
 
 # create a entry for taking number from user and packing with grid method
 e=Entry(root,relief=RAISED,bd=3,bg="#ffe6e6",font=('Helvetica', 15 ,'bold'))
