@@ -1,27 +1,66 @@
 from tkinter import *
+from tkinter import ttk
 from pygame import mixer
+from tkinter import messagebox as mb
 from tkinter import filedialog
 import os
 
 
-def play():
-    mixer.music.load(playlistbox.get(ACTIVE))
 
-    mixer.music.play()
-    status.set('Playng')
+playing = False
+paused = False
+mute = False
+
+
+
+
+
+
+
+
+
+
+def play():
+    global playing
+    global paused
+    try:
+        if playing==False:
+            global file
+            file=playlistbox.get(ACTIVE)
+            mixer.music.load(file)
+            mixer.music.play()
+            status.set('Playng -'+str(file.split('.mp3')[0]))
+            playbtn['image']=pause_image
+            playing = True
+        else:
+            if paused == True:
+                mixer.music.unpause()
+                status.set('Playng again  -'+str(file.split('.mp3')[0]))
+                playbtn['image']=pause_image
+                paused = False
+            else:
+                mixer.music.pause()
+                status.set('Music Paused')
+                playbtn['image']=play_image
+                paused = True
+    except:
+        mb.showerror('error','No file found to play.')
+
+
+
+
+
+
+
+    
 
 def stop():
+    global playing
     mixer.music.stop()
-    status.set('Stop')
+    status.set('Music Stopped')
+    playing = False
+    playbtn['image']=play_image
 
-def pause():
-    mixer.music.pause()
-    status.set('Pause')
-
-
-def unpause():
-    mixer.music.unpause()
-    status.set('UnPause')
 
 def prev_song():
     mixer.music.load(songtracks[0]-1)
@@ -31,13 +70,10 @@ def next_song():
     mixer.music.load(songtracks[0]+1)
     mixer.music.play()
 
-def mute():
-    mixer.music.unpause()
-    status.set('UnPause')
 
 
 def loadmusic():
-    dir_=filedialog.askdirectory(initialdir='D:\\',title='Select Directory')
+    dir_=filedialog.askdirectory(initialdir='Desktop',title='Select Directory')
     os.chdir(dir_)
     status.set('Playlist Updated.')
     dir_files = os.listdir(dir_)
@@ -45,8 +81,27 @@ def loadmusic():
         playlistbox.insert(END,file)
 
 
+def mute_fun():
+    global mute
+    
+    if mute == False:
+        mixer.music.set_volume(0.0)
+        status.set('Music Mute')
+        vol_btn['image']=mute_image
+        mute = True
+    else:
+        
+        mixer.music.set_volume(1.0)
+        vol_btn['image']=vol_image
+        status.set('Playng  -'+str(file.split('.mp3')[0]))
+        mute = False
 
 
+
+
+def set_volume(num):
+    volume=volume_bar.get()
+    mixer.music.set_volume(float(volume/100))
 
 
 
@@ -84,38 +139,6 @@ status_frm.place(x=0,y=460,width=800,height=40)
 
 
 
-
-
-play_image=PhotoImage(file = "icon/play.png")
-playbtn=Button(control_frm,text="Play",command=play,image=play_image)
-playbtn.grid(row=1,column=1)
-
-unpause_image=PhotoImage(file = "icon/play.png")
-unpause_btn=Button(control_frm,text="UnPause",command=unpause,image=unpause_image)
-unpause_btn.grid(row=1,column=3)
-
-pause_image=PhotoImage(file = "icon/pause.png")
-pausebtn=Button(control_frm,text="Pause",command=pause,image=pause_image)
-pausebtn.grid(row=1,column=0)
-
-stop_image=PhotoImage(file = "icon/stop.png")
-stopbtn=Button(control_frm,text="Stop",command=stop,image=stop_image)
-stopbtn.grid(row=1,column=2)
-
-prev_image=PhotoImage(file = "icon/prev.png")
-prevbtn=Button(control_frm,text="Prev",command=prev_song,image=prev_image)
-prevbtn.grid(row=1,column=4)
-
-next_image=PhotoImage(file = "icon/next.png")
-nextbtn=Button(control_frm,text="Next",command=next_song,image=next_image)
-nextbtn.grid(row=1,column=5)
-
-mute_image=PhotoImage(file = "icon/mute.png")
-mutebtn=Button(control_frm,text="Mute",command=mute,image=mute_image)
-mutebtn.grid(row=1,column=6)
-
-
-
 loadbtn=Button(playlist_frm,text="Load Music",command=loadmusic)
 loadbtn.pack()
 
@@ -131,11 +154,44 @@ playlistbox.pack(fill=BOTH)
 
 
 
-# os.chdir("Music")
-# songtracks = os.listdir()
 
-# for track in songtracks:
-#     playlistbox.insert(END,track)
+
+
+
+pause_image=PhotoImage(file = "icon/pause.png")
+mute_image=PhotoImage(file = "icon/mute.png")
+
+
+
+play_image=PhotoImage(file = "icon/play.png")
+playbtn=Button(control_frm,text="Play",command=play,image=play_image)
+playbtn.grid(row=1,column=1)
+
+stop_image=PhotoImage(file = "icon/stop.png")
+stopbtn=Button(control_frm,text="Stop",command=stop,image=stop_image)
+stopbtn.grid(row=1,column=2)
+
+
+prev_image=PhotoImage(file = "icon/prev.png")
+prevbtn=Button(control_frm,text="Prev",command=prev_song,image=prev_image)
+prevbtn.grid(row=1,column=4)
+
+next_image=PhotoImage(file = "icon/next.png")
+nextbtn=Button(control_frm,text="Next",command=next_song,image=next_image)
+nextbtn.grid(row=1,column=5)
+
+vol_image=PhotoImage(file = "icon/vol.png")
+vol_btn=Button(control_frm,text="Volume",command=mute_fun,image=vol_image)
+vol_btn.grid(row=1,column=6)
+
+global volume_bar
+volume_bar=ttk.Scale(control_frm,from_=0,to=100,orient=HORIZONTAL,command=set_volume)
+volume_bar.set(70)
+mixer.music.set_volume(0.7)
+volume_bar.grid(row=1,column=7)
+
+
+
 
 
 
