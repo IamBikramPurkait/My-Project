@@ -4,6 +4,7 @@ from mutagen.mp3 import MP3
 from mutagen.id3 import ID3
 from pygame import mixer
 from tkinter import messagebox as mb
+from PIL import ImageTk, Image
 from tkinter import filedialog
 import os
 import time
@@ -26,21 +27,23 @@ def loadmusic():
     dir_ = filedialog.askdirectory(
         initialdir='Desktop', title='Select Directory')
     os.chdir(dir_)
-    status.set('Playlist Updated')
     dir_files = os.listdir(dir_)
     for file in dir_files:
         for ex in extension:
             if file.split('.')[-1] == ex:
                 playlistbox.insert(END, file.replace('.mp3', ''))
                 songs.append(file)
+                status.set('Playlist Updated')
 
 
 def fileselect():
-    song = filedialog.askopenfilename(initialdir='audio/',title="Choose A Song")
+    song = filedialog.askopenfilename(
+        initialdir='audio/', title="Choose A Song")
+    os.chdir(os.path.dirname(song))
+    song = song.split('/')[-1]
     song = song.replace(".mp3", "")
     playlistbox.insert(END, song)
-
-
+    songs.append(f'{song}.mp3')
 
 
 def play():
@@ -57,7 +60,7 @@ def play():
             status.set('Playng - '+str(file.split('.mp3')[0]))
             playbtn['image'] = pause_image
             playing = True
-            # show_detail(file)
+            show_detail(file)
 
         else:
             if paused == True:
@@ -116,7 +119,7 @@ def prev_song():
     playlistbox.selection_clear(0, END)
     playlistbox.activate(index)
     playlistbox.selection_set(index, last=None)
-    # show_detail(file)
+    show_detail(file)
 
 
 def next_song():
@@ -130,7 +133,7 @@ def next_song():
     playlistbox.selection_clear(0, END)
     playlistbox.activate(index)
     playlistbox.selection_set(index, last=None)
-    # show_detail(file)
+    show_detail(file)
 
 
 def mute_fun():
@@ -171,23 +174,33 @@ def show_detail(play_song):
     with open('temp.jpg', 'wb') as img:
         a = ID3(play_song)
         img.write(a.getall('APIC')[0].data)
-        image = makeAlbumArtImage('temp.jpg')
+        image = makealbumartimage('temp.jpg')
         album_art_label.configure(image=image)
         album_art_label.image = image
 
 
-def makeAlbumArtImage(image_path):
+
+def makealbumartimage(image_path):
     image = Image.open(image_path)
-    image = image.resize((150, 150), Image.ANTIALIAS)
-    return PhotoImage(image)
+    image = image.resize((290, 270), Image.ANTIALIAS)
+    return ImageTk.PhotoImage(image)
 
 
 def about():
-    mb.showinfo('Musicolet', 'It is the basic music player with some advance feature made in Python.😎\nIt is created by Bikram Purkait with ❤.\nIt is completed on 01/03/2021.\nThanks for using the application.👍')
+    mb.showinfo('Musicolet', 'It is the basic music player with some advance feature made in Python.😎\nIt is created by Bikram Purkait with ❤.\nIt is completed on 02/03/2021.\nThanks for using the application.👍')
 
 
 def shortcut_key():
-    pass
+    mb.showinfo('Shortcut Key','1> Select a Folder - ctrl + o\n2> Select a File - ctrl + l\n3> Delete a song - Delete\n4> Delete all song - ctrl + Delete\n5> Exit - e\n6> Play/Pause - Spacebar\n7> Select and Play Song - Double Click Left Mouse Button\n8> Prev Song - Up Arrow\n9> Next Song - Down Arrow\n10> Stop - s\n11> Mute - m ')
+
+def exit_fun(event):
+    stop()
+    exit()
+
+
+def repeat():
+    status.set('Feature Coming Soon.Please Stay with Us.')
+
 
 
 # Main Gui
@@ -208,13 +221,13 @@ status.set('❤Welcome to you in Musiocolet❤')
 mainmenu = Menu(root, tearoff=0)
 
 filemenu = Menu(mainmenu, tearoff=0)
-filemenu.add_command(label='Folder Select', command=loadmusic)
-filemenu.add_command(label='File Select', command=fileselect)
+filemenu.add_command(label='Folder Select - ctrl + o',font='Helvetica 10 bold', command=loadmusic)
+filemenu.add_command(label='File Select - ctrl + l',font='Helvetica 10 bold',  command=fileselect)
 filemenu.add_separator()
-filemenu.add_command(label='Delete Song', command=delete_song)
-filemenu.add_command(label='Delete all song', command=delete_allsong)
+filemenu.add_command(label='Delete a Song - Delete',font='Helvetica 10 bold',  command=delete_song)
+filemenu.add_command(label='Delete all song - ctrl + Delete',font='Helvetica 10 bold',  command=delete_allsong)
 filemenu.add_separator()
-filemenu.add_command(label='Exit', command=exit)
+filemenu.add_command(label='Exit - e',font='Helvetica 10 bold',  command=exit)
 
 mainmenu.add_cascade(label='File', menu=filemenu)
 aboutmenu = Menu(mainmenu, tearoff=0)
@@ -225,31 +238,56 @@ root.config(menu=mainmenu)
 
 
 # Create LabelFrame
-songtrack_frm = ttk.LabelFrame(master=root, text="Song Track")
+songtrack_frm = LabelFrame(master=root, text="Song Track",font='Helvetica 11 bold italic',fg='indian red')
 songtrack_frm.place(x=0, y=0, width=350, height=350)
 
 
-playlist_frm = ttk.LabelFrame(master=root, text="Playlist")
+playlist_frm = LabelFrame(master=root, text="Playlist",font='Helvetica 11 bold italic',fg='peachpuff4')
 playlist_frm.place(x=350, y=0, width=450, height=350)
 
 
-control_frm = ttk.LabelFrame(master=root, text="Control Bar")
+control_frm = LabelFrame(master=root, text="Control Bar",font='Helvetica 11 bold italic',fg='blue')
 control_frm.place(x=0, y=350, width=800, height=110)
 
 
-status_frm = ttk.LabelFrame(master=root, text="Song Status")
+status_frm = LabelFrame(master=root, text="Song Status",font='Helvetica 11 bold italic',fg='DarkOrange4')
 status_frm.place(x=0, y=460, width=800, height=40)
 
-
+s = ttk.Style()
+s.configure('TButton', font='Helvetica 10 bold italic')
 # Create PlaylistBox and set vertical scroll and add load button
-loadbtn = ttk.Button(playlist_frm, text="Load Music", command=loadmusic)
+loadbtn = ttk.Button(playlist_frm, text="Load Music", command=loadmusic,style='TButton')
 loadbtn.pack()
+
+
+def load_fun(event):
+    loadmusic()
+
+def file_select_fun(event):
+    fileselect()
+
+def delete_song_fun(event):
+    delete_song()
+
+def delete_all_song_fun(event):
+    delete_allsong()
+
+def mute_key_fun(event):
+    mute_fun()
+
+
+root.bind('<Control-o>', load_fun)
+root.bind('<Control-l>', file_select_fun)
+root.bind('<Delete>', delete_song_fun)
+root.bind('<Control-Delete>', delete_all_song_fun)
+root.bind('<e>', exit_fun)
+root.bind('<m>', mute_key_fun)
 
 
 x_scroll = ttk.Scrollbar(playlist_frm, orient=HORIZONTAL)
 y_scroll = ttk.Scrollbar(playlist_frm, orient=VERTICAL)
 playlistbox = Listbox(playlist_frm, yscrollcommand=y_scroll.set,
-                      xscrollcommand=x_scroll.set, height=350)
+                      xscrollcommand=x_scroll.set, height=350,font='Helvetica 10 italic',fg='purple4')
 x_scroll.pack(side=BOTTOM, fill=X)
 y_scroll.pack(side=RIGHT, fill=Y)
 x_scroll.config(command=playlistbox.xview)
@@ -271,26 +309,132 @@ shuffle_image = PhotoImage(file="icon/shuffle.png")
 
 
 album_art_label = Label(songtrack_frm)
-album_art_label.place(x=0, y=0)
+album_art_label.place(x=25, y=25)
+
 
 # Creating Button
 playbtn = Button(control_frm, command=play, image=play_image, bd=0)
 playbtn.place(x=350, y=5)
 
+
+def on_enter_play(event):
+    play_des.place(x=325, y=35)
+
+
+def on_leave_play(event):
+    play_des.place(x=1000, y=1000)
+
+
+def play_fun(event):
+    if event.char == ' ':
+        play()
+
+
+def play_fun_doublebutton(event):
+    stop()
+    play()
+
+
+playbtn.bind('<Enter>', on_enter_play)
+playbtn.bind('<Leave>', on_leave_play)
+root.bind('<Key>', play_fun)
+root.bind('<Double-Button-1>', play_fun_doublebutton)
+
+
 prevbtn = Button(control_frm, image=prev_image, bd=0, command=prev_song)
 prevbtn.place(x=300, y=0)
+
+
+def prev_fun(event):
+    prev_song()
+
+
+def on_enter_prev(event):
+    prev_des.place(x=290, y=35)
+
+
+def on_leave_prev(event):
+    prev_des.place(x=1000, y=1000)
+
+
+prevbtn.bind('<Enter>', on_enter_prev)
+prevbtn.bind('<Leave>', on_leave_prev)
+root.bind('<Up>', prev_fun)
+
 
 nextbtn = Button(control_frm, image=next_image, bd=0, command=next_song)
 nextbtn.place(x=380, y=0)
 
+
+def next_fun(event):
+    next_song()
+
+
+def on_enter_next(event):
+    next_des.place(x=365, y=35)
+
+
+def on_leave_next(event):
+    next_des.place(x=1000, y=1000)
+
+
+nextbtn.bind('<Enter>', on_enter_next)
+nextbtn.bind('<Leave>', on_leave_next)
+root.bind('<Down>', next_fun)
+
+
 stopbtn = Button(control_frm, command=stop, image=stop_image, bd=0)
 stopbtn.place(x=425, y=5)
+
+
+def stop_fun(event):
+    stop()
+
+
+def on_enter_stop(event):
+    stop_des.place(x=410, y=35)
+
+
+def on_leave_stop(event):
+    stop_des.place(x=1000, y=1000)
+
+
+stopbtn.bind('<Enter>', on_enter_stop)
+stopbtn.bind('<Leave>', on_leave_stop)
+root.bind('<s>', stop_fun)
+
 
 vol_btn = Button(control_frm, command=mute_fun, image=vol_image, bd=0)
 vol_btn.place(x=600, y=10)
 
-repeat_btn = Button(control_frm, image=repeat_image, bd=0)
+
+def on_enter_vol(event):
+    vol_des.place(x=595, y=35)
+
+
+def on_leave_vol(event):
+    vol_des.place(x=1000, y=1000)
+
+
+vol_btn.bind('<Enter>', on_enter_vol)
+vol_btn.bind('<Leave>', on_leave_vol)
+
+
+repeat_btn = Button(control_frm, image=repeat_image, bd=0, command=repeat)
 repeat_btn.place(x=265, y=7)
+
+
+def on_enter_repeat(event):
+    repeat_des.place(x=255, y=35)
+
+
+def on_leave_repeat(event):
+    repeat_des.place(x=1000, y=1000)
+
+
+repeat_btn.bind('<Enter>', on_enter_repeat)
+repeat_btn.bind('<Leave>', on_leave_repeat)
+
 
 global volume_bar
 volume_bar = ttk.Scale(control_frm, from_=0, to=100,
@@ -302,13 +446,13 @@ volume_bar.place(x=630, y=8)
 
 # Time Durations
 global dur_start, dur_end
-dur_start = ttk.Label(control_frm, text='00:00')
+dur_start = Label(control_frm, text='00:00',font='Helvetica 11 bold italic',fg='dark violet')
 dur_start.place(x=80, y=50)
-dur_end = ttk.Label(control_frm, text='00:00')
+dur_end = Label(control_frm, text='00:00',font='Helvetica 11 bold italic',fg='dark violet')
 dur_end.place(x=650, y=50)
 
 
-status_lbl = Label(status_frm, textvariable=status)
+status_lbl = Label(status_frm, textvariable=status,font='Helvetica 11 bold italic',fg='dark green')
 status_lbl.pack()
 
 
@@ -318,6 +462,14 @@ myscroll = ttk.Scale(control_frm, from_=0, to=100,
 myscroll.place(x=130, y=50)
 myscrolllabel = Label(control_frm, text='')
 myscrolllabel.place(x=400, y=70)
+
+
+play_des = Label(control_frm, text='Play/Pause', relief='groove')
+stop_des = Label(control_frm, text='Stop Music', relief='groove')
+prev_des = Label(control_frm, text='Previous Track', relief='groove')
+next_des = Label(control_frm, text='Next Track', relief='groove')
+vol_des = Label(control_frm, text='Mute', relief='groove')
+repeat_des = Label(control_frm, text='Repeat', relief='groove')
 
 
 root.mainloop()
