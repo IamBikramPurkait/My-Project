@@ -1,3 +1,5 @@
+
+# Import neccesary module
 from tkinter import *
 from tkinter import ttk
 from mutagen.mp3 import MP3
@@ -9,165 +11,250 @@ from tkinter import filedialog
 import os
 import time
 
-
+# Set global value
 playing = False
 paused = False
 mute = False
 current_time = 0
 total_time = 0
 current_time_converted = 0
-
 songs = []
 file = ''
 
 
+# Function for load music folderwise
 def loadmusic():
+    # create a list for playble extension
     extension = ['mp3', 'wav', 'mpeg', 'm4a', 'wma', 'ogg']
-    global songs, dir_
+    global songs
+    # Ask for a directory, and return the file name
     dir_ = filedialog.askdirectory(
         initialdir='Desktop', title='Select Directory')
+    # Change the current working directory to the specified path.
     os.chdir(dir_)
+    # Return a list containing the names of the files in the directory
     dir_files = os.listdir(dir_)
+    # check extension from the selected folder and insert a song in playlist box and songs list
     for file in dir_files:
         for ex in extension:
+            # check for right extension
             if file.split('.')[-1] == ex:
+                # insert the song in playlist box by removing .mp3 from the song name
                 playlistbox.insert(END, file.replace('.mp3', ''))
+                # insert the song in songs list
                 songs.append(file)
+                # update status
                 status.set('Playlist Updated')
 
-
+# Function for load music filewise
 def fileselect():
+    # Ask for a filename to open
     song = filedialog.askopenfilename(
         initialdir='audio/', title="Choose A Song")
+    # Change the current working directory to the specified path
     os.chdir(os.path.dirname(song))
+    # remove path and .mp3 from the song name
     song = song.split('/')[-1]
     song = song.replace(".mp3", "")
+    # insert a song in playlist box
     playlistbox.insert(END, song)
+    # insert a song in songs list with adding .mp3 extension
     songs.append(f'{song}.mp3')
 
-
+# function for playing a song
 def play():
+    # make playing and paused global variable
     global playing
     global paused
 
+# using try and except block
     try:
+        # if playing == false then song is paused state so play the song
         if playing == False:
             global file
+            # Get a ACTIVE item from playlist box
             file = playlistbox.get(ACTIVE)
+            # adding .mp3 in file name
             file = f"{file}.mp3"
+            # load the song
             mixer.music.load(file)
+            # play the song
             mixer.music.play()
+            # update the status bar
             status.set('Playng - '+str(file.split('.mp3')[0]))
+            # change the play button image to pause button image
             playbtn['image'] = pause_image
+            # set the playing variable state to True
             playing = True
+            # show the album art for the current ACTIVE song
             show_detail(file)
 
         else:
+            # if paused == True then music is currently in paused state
             if paused == True:
+                # unpause the song
                 mixer.music.unpause()
+                # update the status
                 status.set('Playng - '+str(file.split('.mp3')[0]))
+                # change the play button image to pause button image
                 playbtn['image'] = pause_image
+                # set the paused variable state to False
                 paused = False
             else:
+                # pause the song
                 mixer.music.pause()
+                # update the status
                 status.set('Music Paused')
+                # change the pause button image to play button image
                 playbtn['image'] = play_image
+                # set the paused variable state to True
                 paused = True
 
+        # call the play_time function for get the song details
         play_time()
 
     except:
+        # show error if no songs found to play
         mb.showerror('error', 'No file found to play.')
 
-
+# function for grab the songs details
 def play_time():
+    # get the current position of the song in sec
     current_time = mixer.music.get_pos()/1000
+    # formatting the current song time in local mm:ss format  
     current_time_converted = time.strftime('%M:%S', time.gmtime(current_time))
+    # set the start durartion label to current_time_converted
     dur_start.config(text=current_time_converted)
+    # update the song scalebar by song current time
     myscroll.config(value=int(current_time))
-
+    # call the play_time function after every 1000 ms to update the current song time
     dur_start.after(1000, play_time)
     global file
+    # load song with mutagen
     song = MP3(file)
     global total_time
+    # get the song length
     total_time = song.info.length
+    # convert song length to local mm:ss format
     total_time_converted = time.strftime('%M:%S', time.gmtime(total_time))
+    # update the end duration label by the song length
     dur_end.config(text=total_time_converted)
-
+    # change the total song slider size to song length
     slider_pos = int(total_time)
     myscroll.config(to=slider_pos)
 
-
+# function for stop the song
 def stop():
     global playing, dur_start
+    # stop the song
     mixer.music.stop()
+    # set the playing variable state to False
     playing = False
+    # change the pause button image to play button image
     playbtn['image'] = play_image
+    # Clear the ACTIVE selection song from the playlist box 
     playlistbox.selection_clear(ACTIVE)
+    # update the status
     status.set('Music Stopped')
+    # update the start duration label to 00:00
     dur_start.config(text='00:00')
 
-
+# function the change the previous song
 def prev_song():
     global songs
     global file
+    # get the previous songs index from the songs list using file name
     index = songs.index(file)-1
+    # get the song name using index
     file = songs[index]
+    # load the song
     mixer.music.load(file)
+    # play the song
     mixer.music.play()
+    # update the status
     status.set('Playng - '+str(file.split('.mp3')[0]))
+    # clear the past song selection in playlist box
     playlistbox.selection_clear(0, END)
+    # activate the new song selection bar
     playlistbox.activate(index)
+    # set the new song selection bar
     playlistbox.selection_set(index, last=None)
+    # show the album art for the current ACTIVE song
     show_detail(file)
 
-
+# function for change the next song
 def next_song():
     global file
     global songs
+    # get the next songs index from the songs list using file name
     index = songs.index(file)+1
+    # get the song name using index
     file = songs[index]
+    # load the song
     mixer.music.load(file)
+    # play the song
     mixer.music.play()
+    # update the status
     status.set('Playng - '+str(file.split('.mp3')[0]))
+    # clear the past song selection in playlist box
     playlistbox.selection_clear(0, END)
+    # activate the new song selection bar
     playlistbox.activate(index)
+    # set the new song selection bar
     playlistbox.selection_set(index, last=None)
+    # show the album art for the current ACTIVE song
     show_detail(file)
 
-
+# function for the mute the song
 def mute_fun():
     global mute
-
+    # if song not mute then mute the song
     if mute == False:
+        # set the song volume to 0.0
         mixer.music.set_volume(0.0)
+        # update the status
         status.set('Music Mute')
+        # change the volume button image to mute button image
         vol_btn['image'] = mute_image
+        # set the mute variable state to True
         mute = True
     else:
-
+        # if song not mute then set the song volume to full level
         mixer.music.set_volume(1.0)
+        # change the mute button image to volume button image
         vol_btn['image'] = vol_image
+        # upadte the status
         status.set('Playng  -'+str(file.split('.mp3')[0]))
+        # set the mute variable state to False
         mute = False
 
-
+# function for the change the volume level using volume slider 
 def set_volume(num):
+    # get the current volume slider value
     volume = volume_bar.get()/100
+    # set the current volume slider value to songs volume
     mixer.music.set_volume(float(volume))
 
-
+# function for the delete a single song from a playlist box
 def delete_song():
-    status.set('Song Deleted')
+    # stop the current song
+    mixer.music.stop()
+    # delete the ANCHOR song from the playlist box
     playlistbox.delete(ANCHOR)
-    mixer.music.stop()
+    # clear the selection
     playlistbox.selection_clear(ANCHOR)
+    # update the status
+    status.set('Song Deleted')
 
 
+# function for the delete all song from the playlist box
 def delete_allsong():
-    status.set('All song deleted')
-    playlistbox.delete(0, END)
+    # stop the song
     mixer.music.stop()
+    # delete the all songs from the playlist box
+    playlistbox.delete(0, END) 
+    # update the status
+    status.set('All song deleted')
 
 
 def show_detail(play_song):
